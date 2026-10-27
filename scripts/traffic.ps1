@@ -1,5 +1,5 @@
 param(
-    [string]$BaseUrl = "http://localhost:5000",
+    [string]$BaseUrl = "http://localhost:5001",
     [int]$BaselineSeconds = 30,
     [int]$SpikeSeconds = 10,
     [int]$BaselineRps = 5,

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-http://localhost:5000}"
+BASE_URL="${BASE_URL:-http://localhost:5001}"
 BASELINE_SECONDS="${BASELINE_SECONDS:-30}"
 SPIKE_SECONDS="${SPIKE_SECONDS:-10}"
 BASELINE_RPS="${BASELINE_RPS:-5}"

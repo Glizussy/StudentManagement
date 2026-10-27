@@ -32,8 +32,8 @@ Say: "Four services, one network, names resolved by Docker DNS; no hardcoded IPs
 
 ```
 docker compose exec api python -c "import socket;print(socket.gethostbyname('db'))"
-curl -s localhost:5000/health
-curl -s localhost:5000/students
+curl -s localhost:5001/health
+curl -s localhost:5001/students
 ```
 
 Expected: a container IP, `{"status":"ok","db":"ok"}`, and the 5 seed students
@@ -42,7 +42,7 @@ Expected: a container IP, `{"status":"ok","db":"ok"}`, and the 5 seed students
 ## Step 3 - metrics (1:50, 20s)
 
 ```
-curl -s localhost:5000/metrics | grep http_requests_total | head
+curl -s localhost:5001/metrics | grep http_requests_total | head
 ```
 
 Say: "The API exports counters and a latency histogram; Prometheus pulls them every 5s."
@@ -72,7 +72,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 ```
 
 Say: "Same base file; prod overlay adds restart policies and limits, and publishes only
-5000 and 3000 - the database and Prometheus stay internal."
+5001 and 3000 - the database and Prometheus stay internal."
 
 ## Step 7 - close (4:00)
 

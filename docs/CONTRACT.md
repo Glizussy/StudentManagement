@@ -9,11 +9,13 @@ Owners: A = app layer, B = observability, C = orchestration/demo.
 
 | Service | Image / build | Internal port | Host exposure (dev) | Host exposure (prod) |
 |---|---|---|---|---|
-| `api` | `build: ./api` (python:3.12-slim multi-stage) | 5000 | 5000 | 5000 |
+| `api` | `build: ./api` (python:3.12-slim multi-stage) | 5000 | 5001 | 5001 |
 | `db` | `postgres:16.4-alpine` | 5432 | 5432 | **none** |
 | `prometheus` | `prom/prometheus:v2.53.0` | 9090 | 9090 | **none** |
 | `grafana` | `grafana/grafana:11.1.0` | 3000 | 3000 | 3000 |
 
+- Host mapping is `5001:5000`: TCP 5000 is in a Windows excluded port range on the demo machine.
+  The container port, `API_PORT`, healthcheck URL, and scrape target stay `5000` and must not change.
 - No `latest` tags anywhere.
 - Service names are **DNS hostnames** on `app-net`. Never use `localhost` between containers, never hardcode IPs.
 - Compose v2 only: `docker compose`, not `docker-compose`.
@@ -125,8 +127,8 @@ Base (`docker-compose.yml`): build/images, env, healthchecks, `app-net`, volumes
 
 | Overlay | Adds |
 |---|---|
-| `docker-compose.dev.yml` | bind-mount `./api:/app`, `FLASK_ENV=development` + `--reload`, publish `5000, 5432, 9090, 3000`, debug logging |
-| `docker-compose.prod.yml` | removes bind mounts, `restart: unless-stopped`, resource limits, `gunicorn --workers 1`, publish only `5000, 3000` |
+| `docker-compose.dev.yml` | bind-mount `./api:/app`, `FLASK_ENV=development` + `--reload`, publish `5001, 5432, 9090, 3000`, debug logging |
+| `docker-compose.prod.yml` | removes bind mounts, `restart: unless-stopped`, resource limits, `gunicorn --workers 1`, publish only `5001, 3000` |
 
 Merge semantics: maps merge per key, later `-f` wins; scalars replaced; `ports` appended. `docker compose config` is the proof artifact.
 
@@ -170,7 +172,7 @@ make dev      # docker compose -f docker-compose.yml -f docker-compose.dev.yml u
 make prod     # docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 make down     # down (keeps volumes)
 make clean    # down -v (wipes volumes — required before clean demo)
-make traffic  # runs scripts/traffic.sh against localhost:5000
+make traffic  # runs scripts/traffic.sh against localhost:5001
 make config   # docker compose config (merged output)
 ```
 
@@ -186,7 +188,7 @@ make config   # docker compose config (merged output)
 
 **G0 (T+1:00)** — contract frozen; `docker compose config` valid on all three files.
 **G1 (T+2:45)** — `make dev` → 4 containers up, `api`/`db` healthy, `GET /students` returns seed rows, Prometheus target `api` = UP, Grafana datasource reachable in Explore.
-**G2 (T+5:00)** — after `make clean`, both `make dev` and `make prod` reach all-healthy; dashboard auto-loads with populated panels; prod exposes only 5000/3000.
+**G2 (T+5:00)** — after `make clean`, both `make dev` and `make prod` reach all-healthy; dashboard auto-loads with populated panels; prod exposes only 5001/3000.
 
 ## 15. Change control
 

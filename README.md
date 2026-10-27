@@ -8,7 +8,7 @@ Prometheus, and a Grafana dashboard provisioned entirely from files.
 ```
 browser :3000 ──► grafana ──query──► prometheus:9090
                                         │ scrape :5000/metrics every 5s
-traffic :5000 ──► api ──psycopg2──► db:5432
+traffic :5001 ──► api ──psycopg2──► db:5432
                     └── counters/histograms (prometheus_client)
 ```
 
@@ -24,7 +24,7 @@ make dev          # dev overlay: hot reload, DB + Prometheus + Grafana exposed
 make traffic      # ~40s of GET/POST traffic with a visible spike
 ```
 
-- API: http://localhost:5000/students and `/metrics`
+- API: http://localhost:5001/students and `/metrics`
 - Prometheus: http://localhost:9090 (dev only)
 - Grafana: http://localhost:3000 (`admin` / `admin`), dashboard "Student API - Overview"
 
@@ -33,8 +33,11 @@ make traffic      # ~40s of GET/POST traffic with a visible spike
 | File | Purpose | Publishes |
 |---|---|---|
 | `docker-compose.yml` | base: services, network, volumes, healthchecks, config mounts | nothing |
-| `docker-compose.dev.yml` | bind-mounted source, Flask `--reload`, debug logging | 5000, 5432, 9090, 3000 |
-| `docker-compose.prod.yml` | gunicorn `-w 1`, restart policies, resource limits | 5000, 3000 |
+| `docker-compose.dev.yml` | bind-mounted source, Flask `--reload`, debug logging | 5001, 5432, 9090, 3000 |
+| `docker-compose.prod.yml` | gunicorn `-w 1`, restart policies, resource limits | 5001, 3000 |
+
+The API listens on **5000 inside the container**; the host mapping is `5001:5000` because TCP 5000
+is in a Windows excluded port range on the demo machine. Scrape target and healthcheck are unaffected.
 
 Compose merges later files over earlier ones: maps merge per key, scalars are replaced,
 `ports` are appended. Inspect the merged result with `make config`.
@@ -63,6 +66,13 @@ On Windows without `make`, the PowerShell wrapper exposes the same targets:
 .\scripts\stack.ps1 config
 ```
 
+Gate checks (G1/G2, and demo pre-flight):
+
+```
+.\scripts\acceptance.ps1                     # stack, health, target, dashboard, prod ports
+.\scripts\acceptance.ps1 -RequireTraffic     # also assert metrics arrived
+```
+
 ## Services
 
 | Service | Image | Health | Notes |
@@ -88,6 +98,7 @@ Makefile                                    entry points
 .env.example                                required keys
 scripts/traffic.sh / traffic.ps1           demo load generator (bash / PowerShell)
 scripts/stack.ps1                           PowerShell mirror of the Makefile targets
+scripts/acceptance.ps1                      gate checks (health, target, dashboard, prod ports)
 docs/CONTRACT.md                            frozen shared contract
 docs/DEMO.md                                timed demo runbook
 docs/NOTES.md                               issue log
@@ -101,7 +112,10 @@ monitoring/                                 Member B: Prometheus config, Grafana
 | Symptom | Cause | Fix |
 |---|---|---|
 | `api` unhealthy | DB not ready / bad credentials | `docker compose logs api`, check `.env` |
-| Target `api` DOWN | scrape config or API not exposing `/metrics` | check `monitoring/prometheus.yml`, `curl localhost:5000/metrics` |
+| Target `api` DOWN | scrape config or API not exposing `/metrics` | check `monitoring/prometheus.yml`, `curl localhost:5001/metrics` |
 | Dashboard has no panels | provisioning path wrong | mount must be `/etc/grafana/provisioning` |
 | Tables missing | `init.sql` only runs on empty `pgdata` | `make clean` then `make dev` |
+| `api` won't start: "ports are not available" | TCP 5000 reserved by Windows | see excluded ranges: `netsh interface ipv4 show excludedportrange protocol=tcp`; we map `5001:5000` |
+| `db` logs "Is a directory" | `db/init.sql` did not exist at first `up` | let Member A commit it, then `make clean` |
+| Gate script fails on panels | dashboard still the stub | expected until Member B's 5-panel JSON lands |
 | Panels show "No data" | metric names or labels differ | compare with CONTRACT section 6 |
