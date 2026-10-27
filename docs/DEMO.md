@@ -1,7 +1,7 @@
 # Demo runbook
 
 Target: under 5 minutes, no typing beyond the listed commands.
-Run everything from the repo root in Git Bash, WSL, or PowerShell.
+Run everything from the repo root in Git Bash or WSL; the pipe and grep examples assume a POSIX shell.
 
 If `make` is not installed, use the PowerShell wrapper with the same target names:
 `.\scripts\stack.ps1 dev`, `stack.ps1 traffic`, `stack.ps1 down`, `stack.ps1 clean`, `stack.ps1 config`.
@@ -17,15 +17,17 @@ make clean                      # wipe volumes so init.sql runs
 - Terminal font size up; close Slack and notifications.
 - Backup: dashboard screenshot + 60s screen recording of the live update.
 - Fallback: `make config` output to prove the overlay merge if Docker won't start.
+- Rehearsal should finish with `powershell -NoProfile -File scripts\acceptance.ps1 -RequireTraffic`
+  reporting `All checks passed`.
 
-## Step 1 - cold start (0:00, ~60-90s)
+## Step 1 - cold start (0:00, ~20-40s)
 
 ```
 make dev
 docker compose ps
 ```
 
-Expected: `api` and `db` **healthy**, `prometheus` and `grafana` **healthy** or starting.
+Expected: all four containers **healthy** in roughly twenty seconds with images already built.
 Say: "Four services, one network, names resolved by Docker DNS; no hardcoded IPs."
 
 ## Step 2 - service discovery (1:30, 20s)
@@ -66,9 +68,8 @@ In Grafana: request rate steps up, p95 rises, per-route panel splits.
 
 ```
 make down
-docker compose -f docker-compose.yml -f docker-compose.prod.yml config ^
-  | grep -E "restart:|published" | head
-docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config \
+  | grep -E "restart:|published"
 ```
 
 Say: "Same base file; prod overlay adds restart policies and limits, and publishes only
@@ -77,6 +78,7 @@ Say: "Same base file; prod overlay adds restart policies and limits, and publish
 ## Step 7 - close (4:00)
 
 Restart dev for Q&A: `make dev`
+Optional final proof: `powershell -NoProfile -File scripts\acceptance.ps1 -RequireTraffic`
 
 ## Failure fallback
 

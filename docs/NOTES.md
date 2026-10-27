@@ -36,6 +36,14 @@ Append-only log. One entry per issue: symptom, root cause, fix, owner.
 - Owner: A (file) / C (doc)
 - Gate: G1
 
+### 2026-10-27 - G2 passed, integration complete
+- Root cause: n/a
+- Result: 4 of 4 healthy in 22 seconds from an empty volume; acceptance script 7 of 7;
+  dashboard auto-provisioned with 5 panels; traffic 400 requests at about 7 req/s;
+  prod exposes only 5001 and 3000; error-rate panel reads 0 without 5xx.
+- Owner: C
+- Gate: G2
+
 ### 2026-10-27 - member B branch forked from `main`, not from member A
 - Root cause: `Member-B` contained its own `api/` and `db/` copies, producing add/add
   conflicts against member A's implementation.

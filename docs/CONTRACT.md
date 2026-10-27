@@ -1,6 +1,6 @@
 # SHARED CONTRACT — Student API + Monitoring Stack
 
-Status: **FROZEN at G0.** Changes to any value below require all three members to agree and a one-line entry in `docs/NOTES.md`.
+Status: **FROZEN at G0, verified at G2.** Changes to any value below require all three members to agree and a one-line entry in `docs/NOTES.md`.
 Owners: A = app layer, B = observability, C = orchestration/demo.
 
 ---

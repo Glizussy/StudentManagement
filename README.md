@@ -19,14 +19,21 @@ traffic :5001 ──► api ──psycopg2──► db:5432
 ## Quick start
 
 ```
-cp .env.example .env
-make dev          # dev overlay: hot reload, DB + Prometheus + Grafana exposed
-make traffic      # ~40s of GET/POST traffic with a visible spike
+cp .env.example .env            # PowerShell: Copy-Item .env.example .env
+make clean                      # start from an empty data volume
+make dev                        # four containers healthy in roughly 20 seconds
+make traffic                    # 30s baseline plus a 10s spike
 ```
 
 - API: http://localhost:5001/students and `/metrics`
 - Prometheus: http://localhost:9090 (dev only)
 - Grafana: http://localhost:3000 (`admin` / `admin`), dashboard "Student API - Overview"
+
+Verify the deployment with the acceptance script:
+
+```
+.\scripts\acceptance.ps1 -RequireTraffic
+```
 
 ## Compose matrix
 
@@ -73,6 +80,21 @@ Gate checks (G1/G2, and demo pre-flight):
 .\scripts\acceptance.ps1 -RequireTraffic     # also assert metrics arrived
 ```
 
+## Verification
+
+Observed on a clean volume in both environments:
+
+| Check | Result |
+|---|---|
+| Containers healthy | 4 of 4, cold start about 22s including build |
+| Seeded records | 5 students from `init.sql` |
+| Prometheus target | `api` UP at `http://api:5000/metrics` |
+| Grafana provisioning | dashboard auto-loaded, 5 panels, no manual import |
+| Traffic (400 requests) | rate about 7 req/s, p95 about 29 ms, total counter 400+ |
+| Error-rate panel | reads 0 without 5xx responses |
+| Prod exposure | only 5001 and 3000 published; `db` and `prometheus` internal |
+| `acceptance.ps1 -RequireTraffic` | 7 of 7 checks pass |
+
 ## Services
 
 | Service | Image | Health | Notes |
@@ -116,6 +138,6 @@ monitoring/                                 Member B: Prometheus config, Grafana
 | Dashboard has no panels | provisioning path wrong | mount must be `/etc/grafana/provisioning` |
 | Tables missing | `init.sql` only runs on empty `pgdata` | `make clean` then `make dev` |
 | `api` won't start: "ports are not available" | TCP 5000 reserved by Windows | see excluded ranges: `netsh interface ipv4 show excludedportrange protocol=tcp`; we map `5001:5000` |
-| `db` logs "Is a directory" | `db/init.sql` did not exist at first `up` | let Member A commit it, then `make clean` |
-| Gate script fails on panels | dashboard still the stub | expected until Member B's 5-panel JSON lands |
+| `db` logs "Is a directory" | `db/init.sql` did not exist at first `up` | file exists in the repo, then `make clean` |
 | Panels show "No data" | metric names or labels differ | compare with CONTRACT section 6 |
+| Error-rate panel blank | no 5xx series yet | query ends in `or vector(0)`, so it reads 0 |
