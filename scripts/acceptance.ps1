@@ -4,6 +4,7 @@ param(
     [string]$Grafana = "http://localhost:3000",
     [string]$GrafanaUser = "admin",
     [string]$GrafanaPassword = "admin",
+    [int]$WaitSeconds = 120,
     [switch]$RequireTraffic
 )
 
@@ -27,6 +28,18 @@ $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 
 try {
+    $deadline = (Get-Date).AddSeconds($WaitSeconds)
+    $healthy = 0
+    while ((Get-Date) -lt $deadline) {
+        $states = @(docker compose ps --format json 2>$null | ForEach-Object { $_ | ConvertFrom-Json })
+        $healthy = @($states | Where-Object { $_.Health -eq "healthy" }).Count
+        if ($healthy -eq 4) {
+            break
+        }
+        Write-Host "waiting for containers to become healthy ($healthy of 4)..."
+        Start-Sleep -Seconds 2
+    }
+
     Check "containers healthy (4)" {
         $states = @(docker compose ps --format json | ForEach-Object { $_ | ConvertFrom-Json })
         if ($states.Count -ne 4) {
