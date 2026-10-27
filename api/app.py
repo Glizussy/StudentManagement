@@ -33,7 +33,7 @@ def serialize(row):
 
 
 def parse_id(raw):
-    if not raw.isdigit() or int(raw) > MAX_ID:
+    if not (raw.isascii() and raw.isdigit()) or int(raw) > MAX_ID:
         abort(404)
     return int(raw)
 
