@@ -36,6 +36,15 @@ Append-only log. One entry per issue: symptom, root cause, fix, owner.
 - Owner: A (file) / C (doc)
 - Gate: G1
 
+### 2026-10-27 - db exited: "superuser password is not specified"
+- Root cause: the container was created while Compose could not see `.env`, so
+  `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` were passed as empty strings.
+- Fix: `.env` restored in the repository root, stack recreated with `down -v`, and required
+  variables now use `${VAR:?...}` so a missing `.env` fails immediately with an explicit
+  message instead of a cryptic Postgres error. README troubleshooting updated.
+- Owner: C
+- Gate: G2
+
 ### 2026-10-27 - G2 passed, integration complete
 - Root cause: n/a
 - Result: 4 of 4 healthy in 22 seconds from an empty volume; acceptance script 7 of 7;

@@ -133,6 +133,7 @@ monitoring/                                 Member B: Prometheus config, Grafana
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `db` exits: "superuser password is not specified" | `.env` was not loaded where Compose ran | copy `.env.example` to `.env`, then `make clean` |
 | `api` unhealthy | DB not ready / bad credentials | `docker compose logs api`, check `.env` |
 | Target `api` DOWN | scrape config or API not exposing `/metrics` | check `monitoring/prometheus.yml`, `curl localhost:5001/metrics` |
 | Dashboard has no panels | provisioning path wrong | mount must be `/etc/grafana/provisioning` |
