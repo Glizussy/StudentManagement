@@ -8,5 +8,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY app.py db.py ./
+RUN useradd --system --no-create-home appuser
+USER appuser
 EXPOSE 5000
-CMD ["sh", "-c", "exec gunicorn --workers 1 --bind 0.0.0.0:${API_PORT:-5000} app:app"]
+CMD ["gunicorn","-b","0.0.0.0:5000","-w","1","app:app"]
