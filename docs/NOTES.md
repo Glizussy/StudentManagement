@@ -36,6 +36,21 @@ Append-only log. One entry per issue: symptom, root cause, fix, owner.
 - Owner: A (file) / C (doc)
 - Gate: G1
 
+### 2026-10-27 - member B branch forked from `main`, not from member A
+- Root cause: `Member-B` contained its own `api/` and `db/` copies, producing add/add
+  conflicts against member A's implementation.
+- Fix: resolved the merge in favour of member A for `api/` and `db/`, and member B for
+  `monitoring/`.
+- Owner: C
+- Gate: G2
+
+### 2026-10-27 - error-rate panel showed "No data" with zero 5xx responses
+- Root cause: the numerator is an empty vector when no 5xx series exists, so the whole
+  expression returns no series instead of zero.
+- Fix: appended `or vector(0)` to the panel expression and to the contract.
+- Owner: B
+- Gate: G2
+
 ### 2026-10-27 - `make` is not installed on the Windows demo machine
 - Root cause: Git for Windows / Docker Desktop do not ship GNU make
 - Fix: added `scripts/stack.ps1` (same targets as the Makefile) and `scripts/traffic.ps1`;

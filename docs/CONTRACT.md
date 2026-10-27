@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS students (
 |---|---|
 | Request rate | `sum(rate(http_requests_total[1m]))` |
 | p95 latency | `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))` |
-| Error rate (5xx %) | `100 * sum(rate(http_requests_total{status=~"5.."}[1m])) / sum(rate(http_requests_total[1m]))` |
+| Error rate (5xx %) | `(100 * sum(rate(http_requests_total{status=~"5.."}[1m])) / sum(rate(http_requests_total[1m]))) or vector(0)` |
 | Total requests | `sum(http_requests_total)` |
 | Per-route rate | `sum by (route) (rate(http_requests_total[1m]))` |
 

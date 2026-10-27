@@ -97,7 +97,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
-          "expr": "100 * sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))",
+          "expr": "(100 * sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))) or vector(0)",
           "legendFormat": "5xx %",
           "refId": "A"
         }
